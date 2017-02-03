@@ -10,9 +10,8 @@ var replace = require('gulp-replace');
 var optimize = require('amd-optimize');
 var requirejsOptimize = require('gulp-requirejs-optimize');
 
-
-gulp.task('clear',function() {
-  return gulp.src([ 'dist/'])
+gulp.task('clear', function() {
+  return gulp.src(['dist/'])
     .pipe(clean());
 });
 
@@ -27,12 +26,13 @@ gulp.task('copy_css', function() {
     .pipe(gulp.dest('dist/css'));
 });
 
+// 需要同步requirejs里的配置
 gulp.task('copy_js', function() {
   return gulp.src('public/js/**/*.js')
     .pipe(requirejsOptimize({
-        paths: {
-          'test3':"common/test3"
-        }
+      paths: {
+        "test3": "common/test3"
+      }
     }))
     .pipe(uglify())
     .pipe(gulp.dest('dist/js'));
@@ -40,44 +40,55 @@ gulp.task('copy_js', function() {
 
 gulp.task('copy_img', function() {
   return gulp.src('public/img/**/*.{jpg,jpeg,png,gif,cur}')
-    .pipe(imagemin({ optimizationLevel: 3, progressive: true, interlaced: true }))
+    .pipe(imagemin({
+      optimizationLevel: 3,
+      progressive: true,
+      interlaced: true
+    }))
     .pipe(gulp.dest('dist/img'));
 });
 
 //给文件加指纹
-gulp.task('rev',function() {
+gulp.task('rev', function() {
   return gulp.src([
-    'dist/css/**/*.css',
-    'dist/img/**/*.{jpg,jpeg,png,gif,cur}',
-    'dist/js/**/*.js'
-  ], { base: 'dist/' })
-  .pipe(rev())
-  .pipe(gulp.dest('dist/'))
-  .pipe(rev.manifest())
-  .pipe(gulp.dest('dist/'));
+      'dist/css/**/*.css',
+      'dist/img/**/*.{jpg,jpeg,png,gif,cur}',
+      'dist/js/**/*.js'
+    ], {
+      base: 'dist/'
+    })
+    .pipe(rev())
+    .pipe(gulp.dest('dist/'))
+    .pipe(rev.manifest())
+    .pipe(gulp.dest('dist/'));
 });
 
 //在文件里替换指纹路径
-gulp.task('rev_collector',function() {
-  return gulp.src(['dist/rev-manifest.json','dist/css/**/*.css','dist/view/**/*.{html,htm,hbs}'], { base: 'dist/' })
-    .pipe( revCollector({
-        replaceReved: true
+gulp.task('rev_collector', function() {
+  return gulp.src(['dist/rev-manifest.json', 'dist/css/**/*.css', 'dist/view/**/*.{html,htm,hbs}'], {
+      base: 'dist/'
     })
-    )
-    .pipe( gulp.dest('dist/') );
+    .pipe(revCollector({
+      replaceReved: true
+    }))
+    .pipe(gulp.dest('dist/'));
 });
 
 /*静态资源修改为绝对路径*/
-gulp.task('rev_path', function(){
-  return gulp.src(['dist/css/**/*.css','dist/view/**/*.{html,htm,hbs}'], { base: 'dist/' })
+gulp.task('rev_path', function() {
+  return gulp.src(['dist/css/**/*.css', 'dist/view/**/*.{html,htm,hbs}'], {
+      base: 'dist/'
+    })
+    // 删除main.js
+    // .pipe(replace(/\.\.\/public\/js\/main-.{10}\.js/g, ''))
     //可以改相对地址和绝对地址
-    .pipe(replace(/\.\.\/public\/js\//g,'../js/'))
-    .pipe(replace(/\.\.\/public\/css\//g,'../css/'))
+    .pipe(replace(/\.\.\/public\/js\//g, '../js/'))
+    .pipe(replace(/\.\.\/public\/css\//g, '../css/'))
     // .pipe(replace(/\.\.\/img\//g,'../img/'))
     .pipe(gulp.dest('dist/'));
 });
 
 
-gulp.task('copy_all', gulpsync.sync(['clear',['copy_view', 'copy_css', 'copy_js', 'copy_img']]) );
+gulp.task('copy_all', gulpsync.sync(['clear', ['copy_view', 'copy_css', 'copy_js', 'copy_img']]));
 
-gulp.task('default',gulpsync.sync(['copy_all','rev','rev_collector','rev_path']));
+gulp.task('default', gulpsync.sync(['copy_all', 'rev', 'rev_collector', 'rev_path']));
